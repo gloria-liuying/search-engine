@@ -18,14 +18,14 @@ class Doc:
     def __init__(self, docid, date_time, tf, ld):
         self.docid = docid
         self.date_time = date_time
-        self.tf = tf
-        self.ld = ld
+        self.tf = tf #term在文章中出现的次数
+        self.ld = ld #文档中包含的term数
 
     def __repr__(self):
-        return (str(self.docid) + "\t" + self.date_time + str(self.tf) + "\t" + str(self.ld))
+        return (str(self.docid) + "\t" + self.date_time + "\t" + str(self.tf) + "\t" + str(self.ld))
 
     def __str__(self):
-        return (str(self.docid) + "\t" + self.date_time + str(self.tf) + "\t" + str(self.ld))
+        return (str(self.docid) + "\t" + self.date_time + "\t" + str(self.tf) + "\t" + str(self.ld))
 
 
 class IndexModule:
@@ -64,9 +64,10 @@ class IndexModule:
                     cleaned_dict[i] = cleaned_dict[i] + 1
                 else:
                     cleaned_dict[i] = 1
-            return n, cleaned_dict
+        return n, cleaned_dict
 
-            # 文档写入数据库
+        # 文档写入数据库
+
     def write_postings_to_db(self, db_path):
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
@@ -79,10 +80,8 @@ class IndexModule:
             doc_list = '\n'.join(map(str, value[1]))
             t = (key, value[0], doc_list)
             c.execute("INSERT INTO postings VALUES (?, ?, ?)", t)
-
         conn.commit()
         conn.close()
-
 
     # 文档构建索引
     def construct_postings_lists(self):
@@ -104,6 +103,7 @@ class IndexModule:
             AVG_L = AVG_L + ld
 
             for key, value in cleaned_dict.items():
+
                 d = Doc(docid, date_time, value, ld)
                 if key in self.postings_lists:
                     # df 文档频率
@@ -112,7 +112,7 @@ class IndexModule:
                 else:
                     self.postings_lists[key] = [1, [d]]  # [df, [Doc]]
 
-        AVG_L = AVG_L / len(files)
+        AVG_L = AVG_L / len(files)  # 文档平均长度
         config.set('DEFAULT', 'N', str(len(files)))
         config.set('DEFAULT', 'avg_l', str(AVG_L))
         with open(self.config_path, 'w') as configfile:
